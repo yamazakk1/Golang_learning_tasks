@@ -18,16 +18,26 @@ type Task struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 }
 
+// тут собираем новый ID. Ищем тот, что свободен внутри taskStorage
+
+var LastId int = 0
+
+func idCreator() int {
+	for i := 0; i < LastId;i++{
+		if _, ok := taskStorage[i]; !ok{
+			
+		}
+	}
+	LastId++
+	return LastId
+}
+
 // конструктор для задачи
-func CreateTask(name string, id int) (*Task, error) {
+func CreateTask(name string) (*Task, error) {
 	if name == "" {
 		return nil, ErrEmptyName
 	}
-	for k := range taskStorage {
-		if k == id {
-			return nil, errors.New("invalid id")
-		}
-	}
+	id := idCreator()
 
 	return &Task{Name: name, ID: id, Status: Todo, CreatedAt: time.Now()}, nil
 
@@ -68,6 +78,12 @@ func WriteInFile(fileName string) error {
 
 	return nil
 }
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
 
 // считывает из файла и переводит из JSON в структуры Task, храним в TaskStorage
 func ReadFromFile(fileName string) error {
@@ -76,15 +92,17 @@ func ReadFromFile(fileName string) error {
 		return err
 	}
 	decoder := json.NewDecoder(file)
-	var t Task
 	for {
+		var t Task
 		if err := decoder.Decode(&t); err == io.EOF {
 			break
 		} else if err != nil {
 			return err
 		}
 		taskStorage[t.ID] = &t
+		LastId = max(LastId, t.ID)
 	}
+
 	return nil
 }
 
@@ -169,6 +187,7 @@ func ShowTodoTasks() error {
 			return err
 		}
 	}
+	writer.Flush()
 	return nil
 }
 

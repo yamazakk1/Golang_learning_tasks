@@ -1,5 +1,7 @@
 package main
 
-func main() {
+import "learning/task1"
 
+func main() {
+	task1.CmdClient()
 }
